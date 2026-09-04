@@ -12,5 +12,6 @@ data class HouseItem(
     val notes: String,
     val status: String,
     val maintenanceRecords: List<MaintenanceRecord> = emptyList(),
+    val maintenanceTasks: List<MaintenanceTask> = emptyList(),
     val photoPath: String? = null
 )

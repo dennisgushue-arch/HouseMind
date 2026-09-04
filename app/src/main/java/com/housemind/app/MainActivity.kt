@@ -54,8 +54,10 @@ import com.housemind.app.data.LocalImageStorage
 import com.housemind.app.data.CameraPhoto
 import com.housemind.app.data.CameraPhotoManager
 import com.housemind.app.logic.HouseMindQueryEngine
+import com.housemind.app.logic.MaintenanceScheduleCalculator
 import com.housemind.app.model.HouseItem
 import com.housemind.app.model.MaintenanceRecord
+import com.housemind.app.model.MaintenanceTask
 import com.housemind.app.model.RecognitionResult
 import com.housemind.app.recognition.HouseMindConfig
 import com.housemind.app.recognition.MockRecognitionService
@@ -286,7 +288,7 @@ private fun HomeScreen(
         Text("Your Home", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
         houseItems.forEachIndexed { index, item ->
-            HouseItemCard(item.name, item.brand, item.status, item.photoPath) { onItemClick(item) }
+            HouseItemCard(item.name, item.brand, maintenanceStatusFor(item), item.photoPath) { onItemClick(item) }
             if (index < houseItems.lastIndex) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
@@ -337,9 +339,54 @@ private fun ItemDetailScreen(
         ItemDetailSection.Maintenance -> MaintenanceScreen(
             contentPadding = contentPadding,
             item = item,
-            onBack = { section = ItemDetailSection.Overview },
+            onBack = {
+                section = ItemDetailSection.Overview
+            },
             onSaveRecord = { record ->
-                onUpdateItem(item.copy(maintenanceRecords = item.maintenanceRecords + record))
+                onUpdateItem(
+                    item.copy(
+                        maintenanceRecords =
+                            item.maintenanceRecords + record
+                    )
+                )
+            },
+            onAddTask = { task ->
+                onUpdateItem(
+                    item.copy(
+                        maintenanceTasks =
+                            item.maintenanceTasks + task
+                    )
+                )
+            },
+            onMarkTaskDone = { updatedTask ->
+
+                val updatedTasks =
+                    item.maintenanceTasks.map { task ->
+
+                        if (task.id == updatedTask.id) {
+                            updatedTask
+                        } else {
+                            task
+                        }
+                    }
+
+                val completionRecord =
+                    MaintenanceRecord(
+                        id = UUID.randomUUID().toString(),
+                        date = LocalDate.now().toString(),
+                        serviceType = updatedTask.title,
+                        provider = "",
+                        cost = "",
+                        notes = "Completed from maintenance schedule"
+                    )
+
+                onUpdateItem(
+                    item.copy(
+                        maintenanceTasks = updatedTasks,
+                        maintenanceRecords =
+                            item.maintenanceRecords + completionRecord
+                    )
+                )
             }
         )
         ItemDetailSection.PartsAndFilters -> PlaceholderSection(
@@ -376,7 +423,7 @@ private fun ItemDetailOverview(
         Text(item.brand, fontSize = 18.sp)
         Spacer(modifier = Modifier.height(20.dp))
         Card(modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
-            Text(item.status, modifier = Modifier.padding(18.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium)
+            Text(maintenanceStatusFor(item), modifier = Modifier.padding(18.dp), fontSize = 18.sp, fontWeight = FontWeight.Medium)
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text("Last serviced", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -385,7 +432,7 @@ private fun ItemDetailOverview(
         Spacer(modifier = Modifier.height(28.dp))
         Text("Next up", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        // Temporary scheduling rules; service history does not schedule future work yet.
+        // Uses the saved maintenance schedule to calculate the next task.
         Text(nextActionFor(item))
         Spacer(modifier = Modifier.height(28.dp))
         ItemSectionRow("Maintenance") { onSectionSelected(ItemDetailSection.Maintenance) }
@@ -402,12 +449,36 @@ private fun ItemDetailOverview(
     }
 }
 
-private fun nextActionFor(item: HouseItem): String = when {
-    item.status == "Recently added" -> "No maintenance scheduled yet"
-    item.name == "Kitchen Refrigerator" -> "Replace water filter in 42 days"
-    item.name == "Upstairs AC" -> "Replace filter in 9 days"
-    item.name == "Water Heater" -> "No upcoming maintenance"
-    else -> "No maintenance scheduled yet"
+private fun nextMaintenanceTask(item: HouseItem) =
+    item.maintenanceTasks
+        .mapNotNull { task ->
+            MaintenanceScheduleCalculator
+                .nextDueDate(task)
+                ?.let { dueDate -> task to dueDate }
+        }
+        .minByOrNull { (_, dueDate) -> dueDate }
+        ?.first
+
+private fun maintenanceStatusFor(item: HouseItem): String {
+
+    val nextTask = nextMaintenanceTask(item)
+        ?: return "No maintenance scheduled yet"
+
+    return "${nextTask.title}: ${
+        MaintenanceScheduleCalculator.statusText(nextTask)
+    }"
+}
+
+private fun nextActionFor(item: HouseItem): String {
+
+    val nextTask = nextMaintenanceTask(item)
+        ?: return "No maintenance scheduled yet"
+
+    return "${nextTask.title} — ${
+        MaintenanceScheduleCalculator.statusText(nextTask)
+    } · Next due ${
+        MaintenanceScheduleCalculator.formattedDueDate(nextTask)
+    }"
 }
 
 @Composable
@@ -415,47 +486,145 @@ private fun MaintenanceScreen(
     contentPadding: androidx.compose.foundation.layout.PaddingValues,
     item: HouseItem,
     onBack: () -> Unit,
-    onSaveRecord: (MaintenanceRecord) -> Unit
+    onSaveRecord: (MaintenanceRecord) -> Unit,
+    onAddTask: (MaintenanceTask) -> Unit,
+    onMarkTaskDone: (MaintenanceTask) -> Unit
 ) {
-    var addingRecord by rememberSaveable { mutableStateOf(false) }
+
+    var addingRecord by rememberSaveable {
+        mutableStateOf(false)
+    }
 
     if (addingRecord) {
+
         MaintenanceForm(
             contentPadding = contentPadding,
             itemName = item.name,
-            onCancel = { addingRecord = false },
+            onCancel = {
+                addingRecord = false
+            },
             onSave = {
+
                 onSaveRecord(it)
+
                 addingRecord = false
             }
         )
+
         return
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(contentPadding)
-            .verticalScroll(rememberScrollState()).padding(20.dp)
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .verticalScroll(
+                rememberScrollState()
+            )
+            .padding(20.dp)
     ) {
-        OutlinedButton(onClick = onBack) { Text("Back") }
-        Spacer(modifier = Modifier.height(20.dp))
-        Text("Maintenance", fontSize = 32.sp, fontWeight = FontWeight.Bold)
-        Text(item.name, fontSize = 18.sp)
-        Spacer(modifier = Modifier.height(24.dp))
-        Button(
-            onClick = { addingRecord = true },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+
+        OutlinedButton(
+            onClick = onBack
+        ) {
+            Text("Back")
+        }
+
+        Spacer(
+            modifier = Modifier.height(20.dp)
+        )
+
+        Text(
+            text = "Maintenance",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Text(
+            text = item.name,
+            fontSize = 18.sp
+        )
+
+        Spacer(
+            modifier = Modifier.height(28.dp)
+        )
+
+        MaintenanceTaskSection(
+            tasks = item.maintenanceTasks,
+            onAddTask = onAddTask,
+            onMarkDone = onMarkTaskDone
+        )
+
+        Spacer(
+            modifier = Modifier.height(36.dp)
+        )
+
+        Text(
+            text = "Maintenance History",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold
+        )
+
+        Spacer(
+            modifier = Modifier.height(8.dp)
+        )
+
+        Text(
+            text = "Keep a record of repairs and service."
+        )
+
+        Spacer(
+            modifier = Modifier.height(16.dp)
+        )
+
+        OutlinedButton(
+            onClick = {
+                addingRecord = true
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             shape = RoundedCornerShape(14.dp)
-        ) { Text("Add Maintenance") }
-        Spacer(modifier = Modifier.height(24.dp))
+        ) {
+
+            Text(
+                text = "Add Maintenance Record"
+            )
+        }
+
+        Spacer(
+            modifier = Modifier.height(24.dp)
+        )
+
         if (item.maintenanceRecords.isEmpty()) {
-            Text("No maintenance history yet.")
+
+            Text(
+                text = "No maintenance history yet."
+            )
+
         } else {
-            item.maintenanceRecords.sortedByDescending { it.date }.forEachIndexed { index, record ->
-                MaintenanceRecordCard(record)
-                if (index < item.maintenanceRecords.lastIndex) {
-                    Spacer(modifier = Modifier.height(12.dp))
+
+            item.maintenanceRecords
+                .sortedByDescending {
+                    it.date
                 }
-            }
+                .forEachIndexed { index, record ->
+
+                    MaintenanceRecordCard(
+                        record
+                    )
+
+                    if (
+                        index <
+                        item.maintenanceRecords.lastIndex
+                    ) {
+
+                        Spacer(
+                            modifier =
+                                Modifier.height(12.dp)
+                        )
+                    }
+                }
         }
     }
 }
