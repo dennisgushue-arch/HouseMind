@@ -10,15 +10,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,11 +27,7 @@ import com.housemind.app.logic.MaintenanceScheduleCalculator
 import com.housemind.app.logic.MaintenanceSuggestionEngine
 import com.housemind.app.model.HouseItem
 import com.housemind.app.model.MaintenanceTask
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 import java.util.UUID
 
 @Composable
@@ -231,7 +222,6 @@ private fun MaintenanceTaskCard(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MaintenanceTaskForm(
     existingTask: MaintenanceTask?,
@@ -246,9 +236,6 @@ private fun MaintenanceTaskForm(
     }
     var lastCompletedDate by rememberSaveable(existingTask?.id) {
         mutableStateOf(existingTask?.lastCompletedDate ?: LocalDate.now().toString())
-    }
-    var showDatePicker by rememberSaveable(existingTask?.id) {
-        mutableStateOf(false)
     }
     var intervalValue by rememberSaveable(existingTask?.id, initialIntervalValue) {
         mutableStateOf(existingTask?.intervalValue?.toString() ?: initialIntervalValue)
@@ -288,78 +275,14 @@ private fun MaintenanceTaskForm(
 
         Spacer(Modifier.height(12.dp))
 
-        Text(
-            text = "Last completed",
-            fontWeight = FontWeight.Bold
+        OutlinedTextField(
+            value = lastCompletedDate,
+            onValueChange = { lastCompletedDate = it },
+            label = { Text("Last completed") },
+            supportingText = { Text("Use YYYY-MM-DD") },
+            modifier = Modifier.fillMaxWidth(),
+            singleLine = true
         )
-
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedButton(
-            onClick = { showDatePicker = true },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Text(formatTaskDate(lastCompletedDate))
-        }
-
-        Spacer(Modifier.height(4.dp))
-
-        Text("Tap the date to choose from a calendar.")
-
-        if (showDatePicker) {
-            val initialDateMillis =
-                runCatching {
-                    LocalDate.parse(lastCompletedDate)
-                        .atStartOfDay(ZoneOffset.UTC)
-                        .toInstant()
-                        .toEpochMilli()
-                }.getOrNull()
-
-            val datePickerState =
-                rememberDatePickerState(
-                    initialSelectedDateMillis = initialDateMillis
-                )
-
-            DatePickerDialog(
-                onDismissRequest = {
-                    showDatePicker = false
-                },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis
-                                ?.let { selectedMillis ->
-                                    lastCompletedDate =
-                                        Instant.ofEpochMilli(selectedMillis)
-                                            .atZone(ZoneOffset.UTC)
-                                            .toLocalDate()
-                                            .toString()
-                                }
-
-                            showDatePicker = false
-                        }
-                    ) {
-                        Text("Save")
-                    }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = {
-                            showDatePicker = false
-                        }
-                    ) {
-                        Text("Cancel")
-                    }
-                }
-            ) {
-                DatePicker(
-                    state = datePickerState
-                )
-            }
-        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -454,18 +377,6 @@ private fun MaintenanceTaskForm(
     }
 }
 
-private fun formatTaskDate(
-    dateValue: String
-): String =
-    runCatching {
-        LocalDate.parse(dateValue)
-            .format(
-                DateTimeFormatter.ofPattern(
-                    "MMM d, yyyy",
-                    Locale.US
-                )
-            )
-    }.getOrDefault(dateValue)
 @Composable
 private fun UnitButton(
     label: String,
@@ -480,4 +391,3 @@ private fun UnitButton(
         OutlinedButton(onClick = { onSelected(value) }, modifier = modifier) { Text(label) }
     }
 }
-
