@@ -420,30 +420,6 @@ private fun ItemDetailScreen(
                     )
                 )
             },
-            onUpdateTask = { updatedTask ->
-                onUpdateItem(
-                    item.copy(
-                        maintenanceTasks =
-                            item.maintenanceTasks.map { task ->
-                                if (task.id == updatedTask.id) {
-                                    updatedTask
-                                } else {
-                                    task
-                                }
-                            }
-                    )
-                )
-            },
-            onDeleteTask = { deletedTask ->
-                onUpdateItem(
-                    item.copy(
-                        maintenanceTasks =
-                            item.maintenanceTasks.filterNot { task ->
-                                task.id == deletedTask.id
-                            }
-                    )
-                )
-            },
             onMarkTaskDone = { updatedTask ->
 
                 val updatedTasks =
@@ -574,8 +550,6 @@ private fun MaintenanceScreen(
     onBack: () -> Unit,
     onSaveRecord: (MaintenanceRecord) -> Unit,
     onAddTask: (MaintenanceTask) -> Unit,
-    onUpdateTask: (MaintenanceTask) -> Unit,
-    onDeleteTask: (MaintenanceTask) -> Unit,
     onMarkTaskDone: (MaintenanceTask) -> Unit
 ) {
 
@@ -640,8 +614,6 @@ private fun MaintenanceScreen(
         MaintenanceTaskSection(
             item = item,
             onAddTask = onAddTask,
-            onUpdateTask = onUpdateTask,
-            onDeleteTask = onDeleteTask,
             onMarkDone = onMarkTaskDone
         )
 
@@ -1225,5 +1197,4 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
