@@ -1,10 +1,7 @@
-﻿package com.housemind.app
+package com.housemind.app
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -52,7 +49,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import com.housemind.app.data.LocalHouseItemStorage
 import com.housemind.app.data.LocalImageStorage
 import com.housemind.app.data.CameraPhoto
@@ -66,7 +62,6 @@ import com.housemind.app.model.RecognitionResult
 import com.housemind.app.recognition.HouseMindConfig
 import com.housemind.app.recognition.MockRecognitionService
 import com.housemind.app.recognition.RemoteRecognitionService
-import com.housemind.app.reminders.MaintenanceReminderScheduler
 import com.housemind.app.ui.theme.HouseMindTheme
 import kotlinx.coroutines.delay
 import java.time.LocalDate
@@ -107,63 +102,6 @@ fun HouseMindApp() {
     var recognitionError by rememberSaveable { mutableStateOf<String?>(null) }
     var selectedItemId by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-
-    val notificationPermissionLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.RequestPermission()
-        ) {
-            // Android remembers the homeowner's choice.
-        }
-
-    LaunchedEffect(Unit) {
-
-        MaintenanceReminderScheduler.schedule(
-            context.applicationContext
-        )
-
-        if (
-            Build.VERSION.SDK_INT >=
-            Build.VERSION_CODES.TIRAMISU
-        ) {
-
-            val permission =
-                Manifest.permission.POST_NOTIFICATIONS
-
-            val alreadyGranted =
-                ContextCompat.checkSelfPermission(
-                    context,
-                    permission
-                ) == PackageManager.PERMISSION_GRANTED
-
-            val permissionPreferences =
-                context.getSharedPreferences(
-                    "housemind_notification_permission",
-                    android.content.Context.MODE_PRIVATE
-                )
-
-            val alreadyAsked =
-                permissionPreferences.getBoolean(
-                    "asked_once",
-                    false
-                )
-
-            if (!alreadyGranted && !alreadyAsked) {
-
-                permissionPreferences
-                    .edit()
-                    .putBoolean(
-                        "asked_once",
-                        true
-                    )
-                    .apply()
-
-                notificationPermissionLauncher.launch(
-                    permission
-                )
-            }
-        }
-    }
-
     val storage = remember { LocalHouseItemStorage(context.applicationContext) }
     val imageStorage = remember { LocalImageStorage(context.applicationContext) }
     val recognitionService = remember {
@@ -316,7 +254,7 @@ fun HouseMindApp() {
 }
 
 private enum class HomeMindTab(val label: String, val icon: String) {
-    Home("Home", "âŒ‚"),
+    Home("Home", "⌂"),
     Scan("Scan", "+"),
     Ask("Ask", "?")
 }
@@ -536,9 +474,9 @@ private fun nextActionFor(item: HouseItem): String {
     val nextTask = nextMaintenanceTask(item)
         ?: return "No maintenance scheduled yet"
 
-    return "${nextTask.title} â€” ${
+    return "${nextTask.title} — ${
         MaintenanceScheduleCalculator.statusText(nextTask)
-    } Â· Next due ${
+    } · Next due ${
         MaintenanceScheduleCalculator.formattedDueDate(nextTask)
     }"
 }
