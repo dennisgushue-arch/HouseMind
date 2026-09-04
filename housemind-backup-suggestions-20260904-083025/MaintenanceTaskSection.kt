@@ -1,4 +1,4 @@
-﻿package com.housemind.app
+package com.housemind.app
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,15 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.housemind.app.logic.MaintenanceScheduleCalculator
-import com.housemind.app.logic.MaintenanceSuggestionEngine
-import com.housemind.app.model.HouseItem
 import com.housemind.app.model.MaintenanceTask
 import java.time.LocalDate
 import java.util.UUID
 
 @Composable
 fun MaintenanceTaskSection(
-    item: HouseItem,
+    tasks: List<MaintenanceTask>,
     onAddTask: (MaintenanceTask) -> Unit,
     onMarkDone: (MaintenanceTask) -> Unit
 ) {
@@ -41,24 +39,9 @@ fun MaintenanceTaskSection(
         mutableStateOf(false)
     }
 
-    var initialTitle by rememberSaveable {
-        mutableStateOf("")
-    }
-
-    var initialIntervalValue by rememberSaveable {
-        mutableStateOf("3")
-    }
-
-    var initialIntervalUnit by rememberSaveable {
-        mutableStateOf("months")
-    }
-
     if (addingTask) {
 
         AddMaintenanceTaskForm(
-            initialTitle = initialTitle,
-            initialIntervalValue = initialIntervalValue,
-            initialIntervalUnit = initialIntervalUnit,
             onCancel = {
                 addingTask = false
             },
@@ -72,18 +55,6 @@ fun MaintenanceTaskSection(
 
         return
     }
-
-    val suggestions =
-        MaintenanceSuggestionEngine
-            .suggestionsFor(item)
-            .filterNot { suggestion ->
-                item.maintenanceTasks.any { task ->
-                    task.title.equals(
-                        suggestion.title,
-                        ignoreCase = true
-                    )
-                }
-            }
 
     Column {
 
@@ -101,110 +72,12 @@ fun MaintenanceTaskSection(
             text = "Track what needs to be done and when."
         )
 
-        if (suggestions.isNotEmpty()) {
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            Text(
-                text = "Suggested for this item",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
-
-            Text(
-                text = "Typical guidance only. Confirm the interval with your owner's manual or manufacturer."
-            )
-
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
-
-            suggestions.forEachIndexed { index, suggestion ->
-
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-
-                        Text(
-                            text = suggestion.title,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(4.dp)
-                        )
-
-                        Text(
-                            text =
-                                "Suggested every ${suggestion.intervalValue} ${suggestion.intervalUnit}"
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(6.dp)
-                        )
-
-                        Text(
-                            text = suggestion.reason
-                        )
-
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
-                        )
-
-                        OutlinedButton(
-                            onClick = {
-                                initialTitle =
-                                    suggestion.title
-
-                                initialIntervalValue =
-                                    suggestion.intervalValue
-                                        .toString()
-
-                                initialIntervalUnit =
-                                    suggestion.intervalUnit
-
-                                addingTask = true
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-
-                            Text(
-                                text = "Use Suggestion"
-                            )
-                        }
-                    }
-                }
-
-                if (index < suggestions.lastIndex) {
-
-                    Spacer(
-                        modifier = Modifier.height(10.dp)
-                    )
-                }
-            }
-        }
-
         Spacer(
-            modifier = Modifier.height(20.dp)
+            modifier = Modifier.height(16.dp)
         )
 
         Button(
             onClick = {
-                initialTitle = ""
-                initialIntervalValue = "3"
-                initialIntervalUnit = "months"
                 addingTask = true
             },
             modifier = Modifier
@@ -222,7 +95,7 @@ fun MaintenanceTaskSection(
             modifier = Modifier.height(20.dp)
         )
 
-        if (item.maintenanceTasks.isEmpty()) {
+        if (tasks.isEmpty()) {
 
             Text(
                 text = "No maintenance scheduled yet."
@@ -230,32 +103,27 @@ fun MaintenanceTaskSection(
 
         } else {
 
-            item.maintenanceTasks
-                .forEachIndexed { index, task ->
+            tasks.forEachIndexed { index, task ->
 
-                    MaintenanceTaskCard(
-                        task = task,
-                        onMarkDone = {
-                            onMarkDone(
-                                task.copy(
-                                    lastCompletedDate =
-                                        LocalDate.now()
-                                            .toString()
-                                )
+                MaintenanceTaskCard(
+                    task = task,
+                    onMarkDone = {
+                        onMarkDone(
+                            task.copy(
+                                lastCompletedDate =
+                                    LocalDate.now().toString()
                             )
-                        }
-                    )
-
-                    if (
-                        index <
-                        item.maintenanceTasks.lastIndex
-                    ) {
-
-                        Spacer(
-                            modifier = Modifier.height(12.dp)
                         )
                     }
+                )
+
+                if (index < tasks.lastIndex) {
+
+                    Spacer(
+                        modifier = Modifier.height(12.dp)
+                    )
                 }
+            }
         }
     }
 }
@@ -336,7 +204,7 @@ private fun MaintenanceTaskCard(
             ) {
 
                 Text(
-                    text = "Mark Done"
+                    text = "✓ Mark Done"
                 )
             }
         }
@@ -345,15 +213,12 @@ private fun MaintenanceTaskCard(
 
 @Composable
 private fun AddMaintenanceTaskForm(
-    initialTitle: String,
-    initialIntervalValue: String,
-    initialIntervalUnit: String,
     onCancel: () -> Unit,
     onSave: (MaintenanceTask) -> Unit
 ) {
 
-    var title by rememberSaveable(initialTitle) {
-        mutableStateOf(initialTitle)
+    var title by rememberSaveable {
+        mutableStateOf("")
     }
 
     var lastCompletedDate by rememberSaveable {
@@ -362,16 +227,12 @@ private fun AddMaintenanceTaskForm(
         )
     }
 
-    var intervalValue by rememberSaveable(
-        initialIntervalValue
-    ) {
-        mutableStateOf(initialIntervalValue)
+    var intervalValue by rememberSaveable {
+        mutableStateOf("3")
     }
 
-    var intervalUnit by rememberSaveable(
-        initialIntervalUnit
-    ) {
-        mutableStateOf(initialIntervalUnit)
+    var intervalUnit by rememberSaveable {
+        mutableStateOf("months")
     }
 
     var reminderEnabled by rememberSaveable {
@@ -388,14 +249,6 @@ private fun AddMaintenanceTaskForm(
             text = "Add Maintenance Task",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
-        )
-
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
-
-        Text(
-            text = "Confirm when you last completed this task. HouseMind will calculate the next due date."
         )
 
         Spacer(
@@ -590,7 +443,7 @@ private fun AddMaintenanceTaskForm(
                     }
 
                     interval == null ||
-                        interval <= 0 -> {
+                            interval <= 0 -> {
 
                         errorMessage =
                             "Enter a valid repeat interval."

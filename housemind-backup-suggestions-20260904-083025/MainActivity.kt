@@ -612,7 +612,7 @@ private fun MaintenanceScreen(
         )
 
         MaintenanceTaskSection(
-            item = item,
+            tasks = item.maintenanceTasks,
             onAddTask = onAddTask,
             onMarkDone = onMarkTaskDone
         )
@@ -1197,4 +1197,3 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
