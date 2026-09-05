@@ -27,8 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.OutlinedButton
@@ -336,312 +334,30 @@ private fun HomeScreen(
     onScanSomething: () -> Unit,
     onItemClick: (HouseItem) -> Unit
 ) {
-
-    val sortedItems =
-        houseItems.sortedWith(
-            compareBy<HouseItem> {
-                when (homeUrgency(it)) {
-                    HomeUrgency.Overdue -> 0
-                    HomeUrgency.DueSoon -> 1
-                    HomeUrgency.Good -> 2
-                    HomeUrgency.Unscheduled -> 3
-                }
-            }.thenBy {
-                homeNextDueDate(it) ?: LocalDate.MAX
-            }
-        )
-
-    val attentionItems =
-        sortedItems.filter {
-            when (homeUrgency(it)) {
-                HomeUrgency.Overdue,
-                HomeUrgency.DueSoon -> true
-                else -> false
-            }
-        }
-
-    val otherItems =
-        sortedItems.filterNot { it in attentionItems }
-
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .verticalScroll(rememberScrollState())
-            .padding(20.dp)
+        modifier = Modifier.fillMaxSize().padding(contentPadding)
+            .verticalScroll(rememberScrollState()).padding(20.dp)
     ) {
-
-        Text(
-            text = "HouseMind",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text =
-                if (attentionItems.isEmpty()) {
-                    "Your home is caught up."
-                } else {
-                    "${attentionItems.size} ${
-                        if (attentionItems.size == 1) {
-                            "item needs"
-                        } else {
-                            "items need"
-                        }
-                    } your attention."
-                },
-            fontSize = 16.sp
-        )
-
+        Text("HouseMind", fontSize = 32.sp, fontWeight = FontWeight.Bold)
+        Text("Everything about your home, remembered.", fontSize = 16.sp)
         Spacer(modifier = Modifier.height(24.dp))
-
         Button(
             onClick = onScanSomething,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
             shape = RoundedCornerShape(14.dp)
-        ) {
-            Text("Scan Something")
-        }
-
-        if (attentionItems.isNotEmpty()) {
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "Needs attention",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(6.dp))
-
-            Text(
-                text = "HouseMind puts the most urgent home tasks first."
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            attentionItems.forEachIndexed { index, item ->
-
-                HomePriorityCard(
-                    item = item,
-                    onClick = { onItemClick(item) }
-                )
-
-                if (index < attentionItems.lastIndex) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-            }
-        }
-
-        if (otherItems.isNotEmpty()) {
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "Your Home",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            otherItems.forEachIndexed { index, item ->
-
-                HomePriorityCard(
-                    item = item,
-                    onClick = { onItemClick(item) }
-                )
-
-                if (index < otherItems.lastIndex) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-            }
-        }
-
-        if (houseItems.isEmpty()) {
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Text(
-                text = "Your Home",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = "Scan your first appliance or home system to get started."
-            )
-        }
-    }
-}
-
-private enum class HomeUrgency {
-    Overdue,
-    DueSoon,
-    Good,
-    Unscheduled
-}
-
-private fun homeUrgency(
-    item: HouseItem,
-    today: LocalDate = LocalDate.now()
-): HomeUrgency {
-
-    if (item.maintenanceTasks.isEmpty()) {
-        return HomeUrgency.Unscheduled
-    }
-
-    if (
-        item.maintenanceTasks.any {
-            MaintenanceScheduleCalculator.isOverdue(
-                task = it,
-                today = today
-            )
-        }
-    ) {
-        return HomeUrgency.Overdue
-    }
-
-    if (
-        item.maintenanceTasks.any {
-            MaintenanceScheduleCalculator.isDueSoon(
-                task = it,
-                today = today,
-                withinDays = 30
-            )
-        }
-    ) {
-        return HomeUrgency.DueSoon
-    }
-
-    return HomeUrgency.Good
-}
-
-private fun homeNextDueDate(
-    item: HouseItem
-): LocalDate? =
-    item.maintenanceTasks
-        .mapNotNull {
-            MaintenanceScheduleCalculator.nextDueDate(it)
-        }
-        .minOrNull()
-
-@Composable
-private fun HomePriorityCard(
-    item: HouseItem,
-    onClick: () -> Unit
-) {
-
-    val urgency = homeUrgency(item)
-
-    val containerColor =
-        when (urgency) {
-            HomeUrgency.Overdue ->
-                MaterialTheme.colorScheme.errorContainer
-
-            HomeUrgency.DueSoon ->
-                MaterialTheme.colorScheme.tertiaryContainer
-
-            HomeUrgency.Good ->
-                MaterialTheme.colorScheme.primaryContainer
-
-            HomeUrgency.Unscheduled ->
-                MaterialTheme.colorScheme.surfaceVariant
-        }
-
-    val contentColor =
-        when (urgency) {
-            HomeUrgency.Overdue ->
-                MaterialTheme.colorScheme.onErrorContainer
-
-            HomeUrgency.DueSoon ->
-                MaterialTheme.colorScheme.onTertiaryContainer
-
-            HomeUrgency.Good ->
-                MaterialTheme.colorScheme.onPrimaryContainer
-
-            HomeUrgency.Unscheduled ->
-                MaterialTheme.colorScheme.onSurfaceVariant
-        }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = containerColor,
-            contentColor = contentColor
-        )
-    ) {
-
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-
-            item.photoPath?.let { photoPath ->
-
-                StoredImagePreview(
-                    photoPath = photoPath,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                )
-
+        ) { Text("Scan Something") }
+        Spacer(modifier = Modifier.height(32.dp))
+        Text("Your Home", fontSize = 22.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(12.dp))
+        houseItems.forEachIndexed { index, item ->
+            HouseItemCard(item.name, item.brand, maintenanceStatusFor(item), item.photoPath) { onItemClick(item) }
+            if (index < houseItems.lastIndex) {
                 Spacer(modifier = Modifier.height(12.dp))
             }
-
-            Text(
-                text = item.name,
-                fontSize = 19.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (item.brand.isNotBlank()) {
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(text = item.brand)
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text =
-                    when (urgency) {
-                        HomeUrgency.Overdue -> "OVERDUE"
-                        HomeUrgency.DueSoon -> "DUE SOON"
-                        HomeUrgency.Good -> "ON TRACK"
-                        HomeUrgency.Unscheduled -> "NOT SCHEDULED"
-                    },
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text =
-                    if (urgency == HomeUrgency.Unscheduled) {
-                        "No maintenance schedule yet."
-                    } else {
-                        maintenanceStatusFor(item)
-                    },
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-
-            if (urgency != HomeUrgency.Unscheduled) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(text = nextActionFor(item))
-            }
         }
     }
 }
+
 private enum class ItemDetailSection {
     Overview,
     Maintenance,
@@ -1518,7 +1234,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 
