@@ -475,21 +475,12 @@ private fun ItemDetailScreen(
                 )
             }
         )
-        ItemDetailSection.PartsAndFilters -> PartsAndFiltersScreen(
-            contentPadding = contentPadding,
-            item = item,
-            onBack = {
-                section = ItemDetailSection.Overview
-            },
-            onUpdateItem = onUpdateItem
-        )
-        ItemDetailSection.Documents -> DocumentsScreen(
-            contentPadding = contentPadding,
-            item = item,
-            onBack = {
-                section = ItemDetailSection.Overview
-            }
-        )
+        ItemDetailSection.PartsAndFilters -> PlaceholderSection(
+            contentPadding, "Parts & Filters", "No parts or filters saved yet."
+        ) { section = ItemDetailSection.Overview }
+        ItemDetailSection.Documents -> PlaceholderSection(
+            contentPadding, "Documents", "No documents saved yet."
+        ) { section = ItemDetailSection.Overview }
     }
 }
 
@@ -1234,7 +1225,5 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
-
 
 

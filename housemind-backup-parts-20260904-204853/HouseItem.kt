@@ -1,4 +1,4 @@
-﻿package com.housemind.app.model
+package com.housemind.app.model
 
 data class HouseItem(
     val id: String,
@@ -13,6 +13,5 @@ data class HouseItem(
     val status: String,
     val maintenanceRecords: List<MaintenanceRecord> = emptyList(),
     val maintenanceTasks: List<MaintenanceTask> = emptyList(),
-    val partsAndFilters: List<ReplacementPart> = emptyList(),
     val photoPath: String? = null
 )

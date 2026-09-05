@@ -1,4 +1,4 @@
-﻿package com.housemind.app.logic
+package com.housemind.app.logic
 
 import com.housemind.app.model.HouseItem
 import java.math.BigDecimal
@@ -33,7 +33,7 @@ object HouseMindQueryEngine {
 
         val item = matches.single()
         return when {
-            containsAny(normalizedQuestion, "filter", "part number", "part", "battery", "bulb") -> partsAnswer(item)
+            containsAny(normalizedQuestion, "filter", "part number", "part") -> filterAnswer(item)
             containsAny(normalizedQuestion, "how much", "spent", "cost", "costs") -> costAnswer(item)
             containsAny(normalizedQuestion, "who", "serviced", "repaired", "repair") -> providerAnswer(item)
             containsAny(normalizedQuestion, "when", "last service", "worked on") -> lastServiceAnswer(item)
@@ -63,41 +63,10 @@ object HouseMindQueryEngine {
         }
     }
 
-    private fun partsAnswer(item: HouseItem): HouseMindAnswer {
-        val savedParts =
-            item.partsAndFilters.filter {
-                it.partNumber.isNotBlank()
-            }
-
-        if (savedParts.isNotEmpty()) {
-            val answer =
-                savedParts.joinToString("\n") { part ->
-                    val brandText =
-                        part.brand
-                            .takeIf { it.isNotBlank() }
-                            ?.let { " ($it)" }
-                            ?: ""
-
-                    "- ${part.name}$brandText: ${part.partNumber}"
-                }
-
-            return HouseMindAnswer(
-                "Here are the saved parts and filters for your ${item.name}:\n$answer",
-                item.name
-            )
-        }
-
-        return if (item.filterPartNumber.isBlank()) {
-            HouseMindAnswer(
-                "I don't have a filter or part number saved for your ${item.name} yet.",
-                item.name
-            )
-        } else {
-            HouseMindAnswer(
-                "Your ${item.name} uses ${item.filterPartNumber}.",
-                item.name
-            )
-        }
+    private fun filterAnswer(item: HouseItem) = if (item.filterPartNumber.isBlank()) {
+        HouseMindAnswer("I don't have a filter or part number saved for your ${item.name} yet.", item.name)
+    } else {
+        HouseMindAnswer("Your ${item.name} uses ${item.filterPartNumber}.", item.name)
     }
 
     private fun lastServiceAnswer(item: HouseItem): HouseMindAnswer {
@@ -171,18 +140,15 @@ object HouseMindQueryEngine {
         HouseMindAnswer("You currently have ${items.size} items saved:\n${items.joinToString("\n") { "- ${it.name}" }}")
     }
 
-    private fun isListQuestion(question: String) =
-        containsAny(question, "what appliances", "what items", "saved in my home", "in housemind")
+    private fun isListQuestion(question: String) = containsAny(question, "what appliances", "what items", "saved in my home", "in housemind")
 
-    private fun isAttentionQuestion(question: String) =
-        containsAny(question, "needs attention", "anything need attention")
+    private fun isAttentionQuestion(question: String) = containsAny(question, "needs attention", "anything need attention")
 
     private fun unsupportedAnswer() = HouseMindAnswer(
-        "I don't know that yet. Try asking about an item's model, filter, parts, location, service history, maintenance costs, or status."
+        "I don't know that yet. Try asking about an item's model, filter, location, service history, maintenance costs, or status."
     )
 
-    private fun containsAny(text: String, vararg values: String) =
-        values.any { it in text }
+    private fun containsAny(text: String, vararg values: String) = values.any { it in text }
 
     private fun formatDate(date: String): String = runCatching {
         LocalDate.parse(date).format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US))

@@ -483,13 +483,9 @@ private fun ItemDetailScreen(
             },
             onUpdateItem = onUpdateItem
         )
-        ItemDetailSection.Documents -> DocumentsScreen(
-            contentPadding = contentPadding,
-            item = item,
-            onBack = {
-                section = ItemDetailSection.Overview
-            }
-        )
+        ItemDetailSection.Documents -> PlaceholderSection(
+            contentPadding, "Documents", "No documents saved yet."
+        ) { section = ItemDetailSection.Overview }
     }
 }
 
@@ -1234,7 +1230,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 
