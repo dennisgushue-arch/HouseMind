@@ -132,9 +132,6 @@ class LocalHouseItemStorage(context: Context) {
                 }
             }
         )
-        .put("installedDate", installedDate)
-        .put("lifespanMinYears", lifespanMinYears)
-        .put("lifespanMaxYears", lifespanMaxYears)
         .put("photoPath", photoPath)
 
     private fun JSONObject.toHouseItem(): HouseItem {
@@ -212,15 +209,6 @@ class LocalHouseItemStorage(context: Context) {
                     }
                     ?: emptyList(),
             partsAndFilters = migratedParts,
-            installedDate =
-                optString("installedDate", "")
-                    .takeIf { it.isNotBlank() },
-            lifespanMinYears =
-                optInt("lifespanMinYears", 0)
-                    .takeIf { it > 0 },
-            lifespanMaxYears =
-                optInt("lifespanMaxYears", 0)
-                    .takeIf { it > 0 },
             photoPath =
                 optString("photoPath")
                     .takeIf { it.isNotBlank() }
@@ -288,4 +276,3 @@ class LocalHouseItemStorage(context: Context) {
         const val TAG = "LocalHouseItemStorage"
     }
 }
-

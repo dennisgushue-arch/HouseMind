@@ -660,7 +660,6 @@ private enum class ItemDetailSection {
     Maintenance,
     PartsAndFilters,
     Documents,
-    ReplacementForecast,
     Details,
     Edit
 }
@@ -781,14 +780,6 @@ private fun ItemDetailScreen(
             },
             onUpdateItem = onUpdateItem
         )
-        ItemDetailSection.ReplacementForecast -> ReplacementForecastScreen(
-            contentPadding = contentPadding,
-            item = item,
-            onBack = {
-                section = ItemDetailSection.Overview
-            },
-            onUpdateItem = onUpdateItem
-        )
         ItemDetailSection.Documents -> DocumentsScreen(
             contentPadding = contentPadding,
             item = item,
@@ -841,8 +832,6 @@ private fun ItemDetailOverview(
         ItemSectionRow("Parts & Filters") { onSectionSelected(ItemDetailSection.PartsAndFilters) }
         Spacer(modifier = Modifier.height(10.dp))
         ItemSectionRow("Documents") { onSectionSelected(ItemDetailSection.Documents) }
-        Spacer(modifier = Modifier.height(10.dp))
-        ItemSectionRow("Replacement Forecast") { onSectionSelected(ItemDetailSection.ReplacementForecast) }
         Spacer(modifier = Modifier.height(10.dp))
         ItemSectionRow("Details") { onSectionSelected(ItemDetailSection.Details) }
         Spacer(modifier = Modifier.height(20.dp))
@@ -1561,7 +1550,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 

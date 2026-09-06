@@ -14,9 +14,5 @@ data class HouseItem(
     val maintenanceRecords: List<MaintenanceRecord> = emptyList(),
     val maintenanceTasks: List<MaintenanceTask> = emptyList(),
     val partsAndFilters: List<ReplacementPart> = emptyList(),
-    val installedDate: String? = null,
-    val lifespanMinYears: Int? = null,
-    val lifespanMaxYears: Int? = null,
     val photoPath: String? = null
 )
-
