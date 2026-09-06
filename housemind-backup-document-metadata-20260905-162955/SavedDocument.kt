@@ -8,6 +8,5 @@ data class SavedDocument(
     val localPath: String,
     val mimeType: String,
     val notes: String,
-    val addedDate: String,
-    val warrantyExpirationDate: String? = null
+    val addedDate: String
 )

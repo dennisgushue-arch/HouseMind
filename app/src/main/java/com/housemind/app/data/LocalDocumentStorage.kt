@@ -22,16 +22,34 @@ class LocalDocumentStorage(
         )
 
     fun load(itemId: String): List<SavedDocument> {
-        val raw = preferences.getString(itemId, null)
-            ?: return emptyList()
+
+        val raw =
+            preferences.getString(
+                itemId,
+                null
+            )
+                ?: return emptyList()
 
         return try {
-            val array = JSONArray(raw)
+
+            val array =
+                JSONArray(raw)
+
             List(array.length()) { index ->
-                array.getJSONObject(index).toSavedDocument()
+
+                array
+                    .getJSONObject(index)
+                    .toSavedDocument()
             }
+
         } catch (exception: Exception) {
-            Log.e(TAG, "Unable to read saved documents.", exception)
+
+            Log.e(
+                TAG,
+                "Unable to read saved documents.",
+                exception
+            )
+
             emptyList()
         }
     }
@@ -41,107 +59,336 @@ class LocalDocumentStorage(
         itemId: String,
         title: String,
         type: String,
-        notes: String
+        notes: String,
+        warrantyExpirationDate: String?
     ): SavedDocument? {
+
         return try {
-            val resolver = context.contentResolver
-            val originalName = displayName(sourceUri) ?: "document"
-            val safeExtension = originalName
-                .substringAfterLast('.', "")
-                .replace(Regex("[^A-Za-z0-9]"), "")
-                .takeIf { it.isNotBlank() }
 
-            val storedName = buildString {
-                append(UUID.randomUUID().toString())
-                if (safeExtension != null) {
-                    append('.')
-                    append(safeExtension)
+            val resolver =
+                context.contentResolver
+
+            val originalName =
+                displayName(sourceUri)
+                    ?: "document"
+
+            val safeExtension =
+                originalName
+                    .substringAfterLast(
+                        '.',
+                        ""
+                    )
+                    .replace(
+                        Regex(
+                            "[^A-Za-z0-9]"
+                        ),
+                        ""
+                    )
+                    .takeIf {
+                        it.isNotBlank()
+                    }
+
+            val storedName =
+                buildString {
+
+                    append(
+                        UUID.randomUUID()
+                            .toString()
+                    )
+
+                    if (
+                        safeExtension != null
+                    ) {
+
+                        append('.')
+                        append(
+                            safeExtension
+                        )
+                    }
                 }
-            }
 
-            val directory = File(
-                context.filesDir,
-                "housemind_documents/$itemId"
-            ).apply { mkdirs() }
+            val directory =
+                File(
+                    context.filesDir,
+                    "housemind_documents/$itemId"
+                ).apply {
 
-            val destination = File(directory, storedName)
-
-            resolver.openInputStream(sourceUri)?.use { input ->
-                destination.outputStream().use { output ->
-                    input.copyTo(output)
+                    mkdirs()
                 }
-            } ?: return null
+
+            val destination =
+                File(
+                    directory,
+                    storedName
+                )
+
+            resolver
+                .openInputStream(
+                    sourceUri
+                )
+                ?.use { input ->
+
+                    destination
+                        .outputStream()
+                        .use { output ->
+
+                            input.copyTo(
+                                output
+                            )
+                        }
+                }
+                ?: return null
 
             SavedDocument(
-                id = UUID.randomUUID().toString(),
-                title = title.trim(),
-                type = type,
-                fileName = originalName,
-                localPath = destination.absolutePath,
-                mimeType = resolver.getType(sourceUri)
-                    ?: "application/octet-stream",
-                notes = notes.trim(),
-                addedDate = LocalDate.now().toString()
+                id =
+                    UUID.randomUUID()
+                        .toString(),
+
+                title =
+                    title.trim(),
+
+                type =
+                    type,
+
+                fileName =
+                    originalName,
+
+                localPath =
+                    destination.absolutePath,
+
+                mimeType =
+                    resolver
+                        .getType(
+                            sourceUri
+                        )
+                        ?: "application/octet-stream",
+
+                notes =
+                    notes.trim(),
+
+                addedDate =
+                    LocalDate.now()
+                        .toString(),
+
+                warrantyExpirationDate =
+                    warrantyExpirationDate
+                        ?.takeIf {
+                            it.isNotBlank()
+                        }
             )
+
         } catch (exception: Exception) {
-            Log.e(TAG, "Unable to save document.", exception)
+
+            Log.e(
+                TAG,
+                "Unable to save document.",
+                exception
+            )
+
             null
         }
     }
 
-    fun save(itemId: String, documents: List<SavedDocument>) {
-        val array = JSONArray()
-        documents.forEach { array.put(it.toJson()) }
+    fun save(
+        itemId: String,
+        documents: List<SavedDocument>
+    ) {
 
-        preferences.edit()
-            .putString(itemId, array.toString())
+        val array =
+            JSONArray()
+
+        documents.forEach {
+            array.put(
+                it.toJson()
+            )
+        }
+
+        preferences
+            .edit()
+            .putString(
+                itemId,
+                array.toString()
+            )
             .apply()
     }
 
-    fun deleteFile(document: SavedDocument) {
-        runCatching { File(document.localPath).delete() }
-            .onFailure { Log.e(TAG, "Unable to delete document file.", it) }
+    fun deleteFile(
+        document: SavedDocument
+    ) {
+
+        runCatching {
+
+            File(
+                document.localPath
+            ).delete()
+        }
+            .onFailure {
+
+                Log.e(
+                    TAG,
+                    "Unable to delete document file.",
+                    it
+                )
+            }
     }
 
-    fun exists(document: SavedDocument): Boolean =
-        document.localPath.isNotBlank() && File(document.localPath).exists()
+    fun exists(
+        document: SavedDocument
+    ): Boolean =
+        document.localPath.isNotBlank() &&
+            File(
+                document.localPath
+            ).exists()
 
-    private fun displayName(uri: Uri): String? =
-        context.contentResolver.query(
-            uri,
-            arrayOf(OpenableColumns.DISPLAY_NAME),
-            null,
-            null,
-            null
-        )?.use { cursor ->
-            if (!cursor.moveToFirst()) return@use null
-            val index = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            if (index >= 0) cursor.getString(index) else null
-        }
+    private fun displayName(
+        uri: Uri
+    ): String? =
 
-    private fun SavedDocument.toJson() = JSONObject()
-        .put("id", id)
-        .put("title", title)
-        .put("type", type)
-        .put("fileName", fileName)
-        .put("localPath", localPath)
-        .put("mimeType", mimeType)
-        .put("notes", notes)
-        .put("addedDate", addedDate)
+        context
+            .contentResolver
+            .query(
+                uri,
+                arrayOf(
+                    OpenableColumns.DISPLAY_NAME
+                ),
+                null,
+                null,
+                null
+            )
+            ?.use { cursor ->
 
-    private fun JSONObject.toSavedDocument() = SavedDocument(
-        id = optString("id", UUID.randomUUID().toString()),
-        title = optString("title", "Document"),
-        type = optString("type", "Other"),
-        fileName = optString("fileName", ""),
-        localPath = optString("localPath", ""),
-        mimeType = optString("mimeType", "application/octet-stream"),
-        notes = optString("notes", ""),
-        addedDate = optString("addedDate", "")
-    )
+                if (
+                    !cursor.moveToFirst()
+                ) {
+
+                    return@use null
+                }
+
+                val index =
+                    cursor.getColumnIndex(
+                        OpenableColumns.DISPLAY_NAME
+                    )
+
+                if (
+                    index >= 0
+                ) {
+
+                    cursor.getString(
+                        index
+                    )
+
+                } else {
+
+                    null
+                }
+            }
+
+    private fun SavedDocument.toJson() =
+        JSONObject()
+            .put(
+                "id",
+                id
+            )
+            .put(
+                "title",
+                title
+            )
+            .put(
+                "type",
+                type
+            )
+            .put(
+                "fileName",
+                fileName
+            )
+            .put(
+                "localPath",
+                localPath
+            )
+            .put(
+                "mimeType",
+                mimeType
+            )
+            .put(
+                "notes",
+                notes
+            )
+            .put(
+                "addedDate",
+                addedDate
+            )
+            .put(
+                "warrantyExpirationDate",
+                warrantyExpirationDate
+            )
+
+    private fun JSONObject.toSavedDocument() =
+        SavedDocument(
+            id =
+                optString(
+                    "id",
+                    UUID.randomUUID()
+                        .toString()
+                ),
+
+            title =
+                optString(
+                    "title",
+                    "Document"
+                ),
+
+            type =
+                optString(
+                    "type",
+                    "Other"
+                ),
+
+            fileName =
+                optString(
+                    "fileName",
+                    ""
+                ),
+
+            localPath =
+                optString(
+                    "localPath",
+                    ""
+                ),
+
+            mimeType =
+                optString(
+                    "mimeType",
+                    "application/octet-stream"
+                ),
+
+            notes =
+                optString(
+                    "notes",
+                    ""
+                ),
+
+            addedDate =
+                optString(
+                    "addedDate",
+                    ""
+                ),
+
+            warrantyExpirationDate =
+                optString(
+                    "warrantyExpirationDate",
+                    ""
+                )
+                    .takeIf {
+                        it.isNotBlank()
+                    }
+        )
 
     private companion object {
-        const val PREFERENCES_NAME = "housemind_documents"
-        const val TAG = "LocalDocumentStorage"
+
+        const val PREFERENCES_NAME =
+            "housemind_documents"
+
+        const val TAG =
+            "LocalDocumentStorage"
     }
 }
