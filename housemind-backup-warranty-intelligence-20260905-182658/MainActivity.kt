@@ -405,10 +405,6 @@ private fun HomeScreen(
             Text("Scan Something")
         }
 
-        WarrantyHomeSection(
-            houseItems = houseItems,
-            onItemClick = onItemClick
-        )
         if (attentionItems.isNotEmpty()) {
 
             Spacer(modifier = Modifier.height(30.dp))
@@ -1355,13 +1351,6 @@ private fun AskScreen(
     var question by rememberSaveable { mutableStateOf("") }
     var answerText by rememberSaveable { mutableStateOf<String?>(null) }
     var sourceLabel by rememberSaveable { mutableStateOf<String?>(null) }
-    val warrantyContext = LocalContext.current
-
-    val warrantyDocumentStorage = remember(warrantyContext) {
-        com.housemind.app.data.LocalDocumentStorage(
-            warrantyContext.applicationContext
-        )
-    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(contentPadding)
@@ -1383,17 +1372,7 @@ private fun AskScreen(
         Spacer(modifier = Modifier.height(12.dp))
         Button(
             onClick = {
-                val answer =
-                    com.housemind.app.logic.WarrantyIntelligence.answer(
-                        question = question.trim(),
-                        items = houseItems,
-                        loadDocuments = { itemId ->
-                            warrantyDocumentStorage.load(itemId)
-                        }
-                    ) ?: HouseMindQueryEngine.answer(
-                        question.trim(),
-                        houseItems
-                    )
+                val answer = HouseMindQueryEngine.answer(question.trim(), houseItems)
                 answerText = answer.answerText
                 sourceLabel = answer.sourceLabel
             },
@@ -1411,8 +1390,6 @@ private fun AskScreen(
         Spacer(modifier = Modifier.height(28.dp))
         Text("Try asking", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(12.dp))
-        SuggestedQuestion("When does my refrigerator warranty expire?") { question = it }
-        Spacer(modifier = Modifier.height(8.dp))
         SuggestedQuestion("What filter does my refrigerator use?") { question = it }
         Spacer(modifier = Modifier.height(8.dp))
         SuggestedQuestion("When was my AC last serviced?") { question = it }
@@ -1541,7 +1518,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 

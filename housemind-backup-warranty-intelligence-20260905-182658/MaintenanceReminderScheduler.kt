@@ -9,11 +9,8 @@ import java.util.concurrent.TimeUnit
 
 object MaintenanceReminderScheduler {
 
-    private const val UNIQUE_DAILY_MAINTENANCE_WORK =
+    private const val UNIQUE_DAILY_WORK =
         "housemind_daily_maintenance_reminders"
-
-    private const val UNIQUE_DAILY_WARRANTY_WORK =
-        "housemind_daily_warranty_reminders"
 
     fun schedule(context: Context) {
 
@@ -22,32 +19,25 @@ object MaintenanceReminderScheduler {
                 context.applicationContext
             )
 
-        workManager.enqueue(
+        // Run one safe check now. The worker only notifies when a task
+        // is at one of HouseMind's reminder thresholds.
+        val immediateCheck =
             OneTimeWorkRequestBuilder<MaintenanceReminderWorker>()
                 .build()
-        )
 
-        workManager.enqueue(
-            OneTimeWorkRequestBuilder<WarrantyReminderWorker>()
-                .build()
-        )
+        workManager.enqueue(immediateCheck)
 
-        workManager.enqueueUniquePeriodicWork(
-            UNIQUE_DAILY_MAINTENANCE_WORK,
-            ExistingPeriodicWorkPolicy.UPDATE,
+        // Keep checking approximately once per day.
+        val dailyCheck =
             PeriodicWorkRequestBuilder<MaintenanceReminderWorker>(
                 24,
                 TimeUnit.HOURS
             ).build()
-        )
 
         workManager.enqueueUniquePeriodicWork(
-            UNIQUE_DAILY_WARRANTY_WORK,
+            UNIQUE_DAILY_WORK,
             ExistingPeriodicWorkPolicy.UPDATE,
-            PeriodicWorkRequestBuilder<WarrantyReminderWorker>(
-                24,
-                TimeUnit.HOURS
-            ).build()
+            dailyCheck
         )
     }
 }
