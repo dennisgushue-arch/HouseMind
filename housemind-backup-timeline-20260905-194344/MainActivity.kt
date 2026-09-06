@@ -312,14 +312,6 @@ fun HouseMindApp() {
                     currentTab = HomeMindTab.Home
                 }
             )
-            HomeMindTab.Timeline -> TimelineScreen(
-                contentPadding = innerPadding,
-                houseItems = houseItems,
-                onItemClick = { item ->
-                    selectedItemId = item.id
-                    currentTab = HomeMindTab.Home
-                }
-            )
             HomeMindTab.Ask -> AskScreen(innerPadding, houseItems)
         }
     }
@@ -328,8 +320,7 @@ fun HouseMindApp() {
 private enum class HomeMindTab(val label: String, val icon: String) {
     Home("Home", "âŒ‚"),
     Scan("Scan", "+"),
-    Ask("Ask", "?"),
-    Timeline("Timeline", "â‰¡")
+    Ask("Ask", "?")
 }
 
 private enum class ScanState {
@@ -1550,7 +1541,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 
