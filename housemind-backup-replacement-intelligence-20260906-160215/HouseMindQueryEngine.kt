@@ -15,14 +15,6 @@ object HouseMindQueryEngine {
 
     fun answer(question: String, items: List<HouseItem>): HouseMindAnswer {
         val normalizedQuestion = question.lowercase().trim()
-        ReplacementForecastIntelligence
-            .answer(
-                question = question,
-                items = items
-            )
-            ?.let {
-                return it
-            }
 
         if (isListQuestion(normalizedQuestion)) {
             return listItems(items)
@@ -196,4 +188,3 @@ object HouseMindQueryEngine {
         LocalDate.parse(date).format(DateTimeFormatter.ofPattern("MMM d, yyyy", Locale.US))
     }.getOrDefault(date)
 }
-

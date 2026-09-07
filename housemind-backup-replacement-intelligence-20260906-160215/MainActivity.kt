@@ -215,7 +215,7 @@ fun HouseMindApp() {
                         currentTab = tab
                         if (tab == HomeMindTab.Home) selectedItemId = null
                     },
-                    icon = { ProfessionalBottomNavIcon(tab.label) },
+                    icon = { Text(tab.icon) },
                     label = { Text(tab.label) }
                 )
             }
@@ -225,7 +225,7 @@ fun HouseMindApp() {
             HomeMindTab.Home -> {
                 val selectedItem = houseItems.firstOrNull { it.id == selectedItemId }
                 if (selectedItem == null) {
-                    ProfessionalHomeScreen(
+                    HomeScreen(
                         contentPadding = innerPadding,
                         houseItems = houseItems,
                         onScanSomething = { currentTab = HomeMindTab.Scan },
@@ -414,10 +414,6 @@ private fun HomeScreen(
             Text("Scan Something")
         }
 
-        ReplacementForecastHomeSection(
-            houseItems = houseItems,
-            onItemClick = onItemClick
-        )
         WarrantyHomeSection(
             houseItems = houseItems,
             onItemClick = onItemClick
@@ -679,28 +675,12 @@ private fun ItemDetailScreen(
     var section by rememberSaveable { mutableStateOf(ItemDetailSection.Overview) }
 
     when (section) {
-        ItemDetailSection.Overview -> ProfessionalItemOverview(
+        ItemDetailSection.Overview -> ItemDetailOverview(
             contentPadding = contentPadding,
             item = item,
             onBack = onBack,
-            onMaintenance = {
-                section = ItemDetailSection.Maintenance
-            },
-            onParts = {
-                section = ItemDetailSection.PartsAndFilters
-            },
-            onDocuments = {
-                section = ItemDetailSection.Documents
-            },
-            onReplacementForecast = {
-                section = ItemDetailSection.ReplacementForecast
-            },
-            onDetails = {
-                section = ItemDetailSection.Details
-            },
-            onEdit = {
-                section = ItemDetailSection.Edit
-            }
+            onEdit = { section = ItemDetailSection.Edit },
+            onSectionSelected = { section = it }
         )
         ItemDetailSection.Details -> ItemDetailsContent(
             contentPadding = contentPadding,
@@ -1581,8 +1561,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
-
 
 
 

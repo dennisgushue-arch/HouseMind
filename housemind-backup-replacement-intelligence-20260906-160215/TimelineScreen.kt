@@ -31,8 +31,7 @@ import java.util.Locale
 private enum class TimelineEventKind {
     ScheduledMaintenance,
     MaintenanceHistory,
-    Warranty,
-    ReplacementForecast
+    Warranty
 }
 
 private data class TimelineEvent(
@@ -80,8 +79,7 @@ fun TimelineScreen(
         events.filter {
             (
                 it.kind == TimelineEventKind.ScheduledMaintenance ||
-                    it.kind == TimelineEventKind.Warranty ||
-                    it.kind == TimelineEventKind.ReplacementForecast
+                    it.kind == TimelineEventKind.Warranty
                 ) &&
                 !it.date.isBefore(today)
         }
@@ -93,10 +91,7 @@ fun TimelineScreen(
         events.filter {
             it.kind == TimelineEventKind.MaintenanceHistory ||
                 (
-                    (
-                        it.kind == TimelineEventKind.Warranty ||
-                            it.kind == TimelineEventKind.ReplacementForecast
-                        ) &&
+                    it.kind == TimelineEventKind.Warranty &&
                         it.date.isBefore(today)
                     )
         }
@@ -261,10 +256,7 @@ private fun TimelineEventCard(
                 event.date.isBefore(today) ->
                 MaterialTheme.colorScheme.errorContainer
 
-            (
-                event.kind == TimelineEventKind.Warranty ||
-                    event.kind == TimelineEventKind.ReplacementForecast
-                ) &&
+            event.kind == TimelineEventKind.Warranty &&
                 !event.date.isBefore(today) ->
                 MaterialTheme.colorScheme.tertiaryContainer
 
@@ -281,10 +273,7 @@ private fun TimelineEventCard(
                 event.date.isBefore(today) ->
                 MaterialTheme.colorScheme.onErrorContainer
 
-            (
-                event.kind == TimelineEventKind.Warranty ||
-                    event.kind == TimelineEventKind.ReplacementForecast
-                ) &&
+            event.kind == TimelineEventKind.Warranty &&
                 !event.date.isBefore(today) ->
                 MaterialTheme.colorScheme.onTertiaryContainer
 
@@ -440,51 +429,6 @@ private fun buildTimelineEvents(
                 )
         }
 
-        com.housemind.app.logic.ReplacementForecastCalculator
-            .forecast(item)
-            ?.let { forecast ->
-
-                events +=
-                    TimelineEvent(
-                        date =
-                            forecast.planningStartDate,
-                        itemId =
-                            item.id,
-                        itemName =
-                            item.name,
-                        title =
-                            "Start replacement planning",
-                        detail =
-                            "Estimated replacement window begins ${
-                                com.housemind.app.logic.ReplacementForecastCalculator
-                                    .formatDate(
-                                        forecast.earliestReplacementDate
-                                    )
-                            }.",
-                        kind =
-                            TimelineEventKind
-                                .ReplacementForecast
-                    )
-
-                events +=
-                    TimelineEvent(
-                        date =
-                            forecast.earliestReplacementDate,
-                        itemId =
-                            item.id,
-                        itemName =
-                            item.name,
-                        title =
-                            "Replacement window begins",
-                        detail =
-                            "General planning range: ${
-                                forecast.earliestReplacementDate.year
-                            }-${forecast.latestReplacementDate.year}.",
-                        kind =
-                            TimelineEventKind
-                                .ReplacementForecast
-                    )
-            }
         documentStorage
             .load(
                 item.id
@@ -534,4 +478,3 @@ private fun formatTimelineDate(
             Locale.US
         )
     )
-
