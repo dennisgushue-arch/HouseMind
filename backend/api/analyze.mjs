@@ -1,4 +1,4 @@
-const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
+﻿const MAX_IMAGE_BYTES = 6 * 1024 * 1024;
 
 export const config = {
   api: {
@@ -80,7 +80,22 @@ export default async function handler(request, response) {
 
     if (!openAiResponse.ok) throw new Error("OpenAI request failed");
     const openAiJson = await openAiResponse.json();
-    const result = JSON.parse(openAiJson.output_text);
+    const outputText = extractOutputText(openAiJson);
+
+    if (!outputText.trim()) {
+      console.error(
+        "Recognition response contained no output text",
+        JSON.stringify({
+          status: openAiJson.status,
+          error: openAiJson.error,
+          incomplete_details: openAiJson.incomplete_details
+        })
+      );
+
+      throw new Error("No recognition output text");
+    }
+
+    const result = JSON.parse(outputText);
     if (!isValidResult(result)) throw new Error("Invalid recognition response");
     return response.status(200).json(result);
   } catch (error) {
@@ -93,3 +108,30 @@ function isValidResult(result) {
   return result && ["high", "medium", "low"].includes(result.confidence) &&
     Object.keys(recognitionSchema.properties).every((key) => typeof result[key] === "string");
 }
+
+function extractOutputText(responseJson) {
+  if (!responseJson || !Array.isArray(responseJson.output)) {
+    return "";
+  }
+
+  const pieces = [];
+
+  for (const item of responseJson.output) {
+    if (!item || item.type !== "message" || !Array.isArray(item.content)) {
+      continue;
+    }
+
+    for (const part of item.content) {
+      if (
+        part &&
+        part.type === "output_text" &&
+        typeof part.text === "string"
+      ) {
+        pieces.push(part.text);
+      }
+    }
+  }
+
+  return pieces.join("");
+}
+

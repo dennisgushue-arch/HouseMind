@@ -153,7 +153,7 @@ Keep instructions concise and homeowner-safe.
     }
 
     const openAiJson = await openAiResponse.json();
-    const outputText = openAiJson.output_text;
+    const outputText = extractOutputText(openAiJson);
 
     if (typeof outputText !== "string" || !outputText.trim()) {
       throw new Error("No structured model research output");
@@ -222,3 +222,30 @@ function isValidResult(result) {
     );
   });
 }
+
+function extractOutputText(responseJson) {
+  if (!responseJson || !Array.isArray(responseJson.output)) {
+    return "";
+  }
+
+  const pieces = [];
+
+  for (const item of responseJson.output) {
+    if (!item || item.type !== "message" || !Array.isArray(item.content)) {
+      continue;
+    }
+
+    for (const part of item.content) {
+      if (
+        part &&
+        part.type === "output_text" &&
+        typeof part.text === "string"
+      ) {
+        pieces.push(part.text);
+      }
+    }
+  }
+
+  return pieces.join("");
+}
+
