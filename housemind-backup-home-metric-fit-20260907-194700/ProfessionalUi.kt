@@ -166,17 +166,17 @@ fun ProfessionalHomeScreen(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
                         value = attentionCount.toString(),
-                        label = "Alerts"
+                        label = "Attention"
                     )
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
                         value = planningCount.toString(),
-                        label = "Plan"
+                        label = "Planning"
                     )
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
@@ -266,33 +266,26 @@ private fun SummaryMetric(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.16f)
     ) {
         Column(
-            modifier = Modifier.padding(vertical = 9.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
         ) {
             Text(
                 text = value,
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
-
-            Spacer(
-                modifier = Modifier.height(2.dp)
-            )
-
             Text(
                 text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.96f),
-                maxLines = 1,
-                softWrap = false
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.82f)
             )
         }
     }
 }
+
 @Composable
 private fun EmptyHomeCard(
     onScanSomething: () -> Unit
@@ -552,7 +545,7 @@ private fun professionalState(
     if (forecast != null && !forecast.planningStartDate.isAfter(today)) {
         return ProItemState(
             status = ProStatus.Planning,
-            label = "Plan",
+            label = "Planning",
             detail = "${forecast.statusText} â€¢ ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
         )
     }
@@ -914,6 +907,4 @@ fun ProfessionalBottomNavIcon(
         contentDescription = label
     )
 }
-
-
 

@@ -171,12 +171,12 @@ fun ProfessionalHomeScreen(
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
                         value = attentionCount.toString(),
-                        label = "Alerts"
+                        label = "Attention"
                     )
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
                         value = planningCount.toString(),
-                        label = "Plan"
+                        label = "Planning"
                     )
                     SummaryMetric(
                         modifier = Modifier.weight(1f),
@@ -552,7 +552,7 @@ private fun professionalState(
     if (forecast != null && !forecast.planningStartDate.isAfter(today)) {
         return ProItemState(
             status = ProStatus.Planning,
-            label = "Plan",
+            label = "Planning",
             detail = "${forecast.statusText} â€¢ ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
         )
     }
@@ -914,6 +914,5 @@ fun ProfessionalBottomNavIcon(
         contentDescription = label
     )
 }
-
 
 
