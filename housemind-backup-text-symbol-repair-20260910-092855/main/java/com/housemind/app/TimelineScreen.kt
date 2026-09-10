@@ -1,4 +1,4 @@
-package com.housemind.app
+﻿package com.housemind.app
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -432,7 +432,7 @@ private fun buildTimelineEvents(
                     detail =
                         detailParts
                             .joinToString(
-                                " · "
+                                " Â· "
                             ),
                     kind =
                         TimelineEventKind

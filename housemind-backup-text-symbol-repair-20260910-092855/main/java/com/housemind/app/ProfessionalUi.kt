@@ -404,7 +404,7 @@ fun ProfessionalHomeScreen(
                                         it.isNotBlank()
                                     }
                                     .joinToString(
-                                        " • "
+                                        " â€¢ "
                                     ),
                             style =
                                 MaterialTheme
@@ -538,7 +538,7 @@ fun ProfessionalHomeScreen(
         ) {
             Text(
                 text =
-                    "$attentionCount attention  •  $planningCount planning  •  $healthyCount on track",
+                    "$attentionCount attention  â€¢  $planningCount planning  â€¢  $healthyCount on track",
                 modifier =
                     Modifier.padding(
                         horizontal = 16.dp,
@@ -793,7 +793,7 @@ private fun ProfessionalHomeItemCard(
                     Text(
                         text = listOf(item.brand, item.modelNumber)
                             .filter { it.isNotBlank() }
-                            .joinToString("  •  "),
+                            .joinToString("  â€¢  "),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -914,7 +914,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Critical,
             label = "Overdue",
-            detail = "${overdueTask.title} • ${MaintenanceScheduleCalculator.statusText(overdueTask)}"
+            detail = "${overdueTask.title} â€¢ ${MaintenanceScheduleCalculator.statusText(overdueTask)}"
         )
     }
 
@@ -931,7 +931,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Attention,
             label = "Due soon",
-            detail = "${dueSoonTask.title} • ${MaintenanceScheduleCalculator.formattedDueDate(dueSoonTask)}"
+            detail = "${dueSoonTask.title} â€¢ ${MaintenanceScheduleCalculator.formattedDueDate(dueSoonTask)}"
         )
     }
 
@@ -961,7 +961,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Planning,
             label = "Plan",
-            detail = "${forecast.statusText} • ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
+            detail = "${forecast.statusText} â€¢ ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
         )
     }
 
@@ -978,7 +978,7 @@ private fun professionalState(
             return ProItemState(
                 status = ProStatus.Healthy,
                 label = "On track",
-                detail = "${nextTask.title} • ${MaintenanceScheduleCalculator.formattedDueDate(nextTask)}"
+                detail = "${nextTask.title} â€¢ ${MaintenanceScheduleCalculator.formattedDueDate(nextTask)}"
             )
         }
     }
@@ -1072,7 +1072,7 @@ fun ProfessionalItemOverview(
             Text(
                 text = listOf(item.brand, item.modelNumber)
                     .filter { it.isNotBlank() }
-                    .joinToString("  •  "),
+                    .joinToString("  â€¢  "),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

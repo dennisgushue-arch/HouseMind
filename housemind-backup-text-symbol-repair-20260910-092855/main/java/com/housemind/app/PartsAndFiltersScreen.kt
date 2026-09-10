@@ -1,4 +1,4 @@
-package com.housemind.app
+﻿package com.housemind.app
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
@@ -222,7 +222,7 @@ fun PartsAndFiltersScreen(
                         it.isNotBlank()
                     }
                     .joinToString(
-                        "  •  "
+                        "  â€¢  "
                     )
                     .ifBlank {
                         item.name

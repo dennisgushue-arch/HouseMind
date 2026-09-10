@@ -1,4 +1,4 @@
-package com.housemind.app
+﻿package com.housemind.app
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -289,17 +289,8 @@ fun HouseMindApp() {
                                 recognitionResult = it
                                 scanState = ScanState.Result
                             }
-                            .onFailure { error ->
-                                recognitionError =
-                                    error.message
-                                        ?: "HouseMind couldn't analyze that photo. Please try again."
-
-                                android.util.Log.e(
-                                    "HouseMindRecognition",
-                                    "Photo analysis failed.",
-                                    error
-                                )
-
+                            .onFailure {
+                                recognitionError = "HouseMind couldn't analyze that photo. Please try again."
                                 scanState = ScanState.ChoosingPhoto
                             }
                     }
@@ -338,7 +329,7 @@ private enum class HomeMindTab(val label: String, val icon: String) {
     Home("Home", "âŒ‚"),
     Scan("Scan", "+"),
     Ask("Ask", "?"),
-    Timeline("Timeline", "≡")
+    Timeline("Timeline", "â‰¡")
 }
 
 private enum class ScanState {
@@ -906,9 +897,9 @@ private fun nextActionFor(item: HouseItem): String {
     val nextTask = nextMaintenanceTask(item)
         ?: return "No maintenance scheduled yet"
 
-    return "${nextTask.title} — ${
+    return "${nextTask.title} â€” ${
         MaintenanceScheduleCalculator.statusText(nextTask)
-    } · Next due ${
+    } Â· Next due ${
         MaintenanceScheduleCalculator.formattedDueDate(nextTask)
     }"
 }
@@ -1590,7 +1581,6 @@ fun HouseMindPreview() {
         HouseMindApp()
     }
 }
-
 
 
 

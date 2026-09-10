@@ -1,4 +1,4 @@
-package com.housemind.app
+﻿package com.housemind.app
 
 import android.graphics.BitmapFactory
 import androidx.compose.foundation.BorderStroke
@@ -94,8 +94,7 @@ fun ProfessionalHomeScreen(
 
     val attentionCount =
         states.values.count {
-            it.status == ProStatus.Critical ||
-                it.status == ProStatus.Attention
+            it.status == ProStatus.Critical || it.status == ProStatus.Attention
         }
 
     val planningCount =
@@ -111,538 +110,131 @@ fun ProfessionalHomeScreen(
     val sortedItems =
         houseItems.sortedWith(
             compareBy<HouseItem> {
-                when (
-                    states[it.id]?.status
-                        ?: ProStatus.Unscheduled
-                ) {
+                when (states[it.id]?.status ?: ProStatus.Unscheduled) {
                     ProStatus.Critical -> 0
                     ProStatus.Attention -> 1
                     ProStatus.Planning -> 2
                     ProStatus.Healthy -> 3
                     ProStatus.Unscheduled -> 4
                 }
-            }
-                .thenBy {
-                    it.name
-                }
+            }.thenBy { it.name }
         )
-
-    val nextItem =
-        sortedItems.firstOrNull()
-
-    val nextState =
-        nextItem?.let {
-            states[it.id]
-        }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding)
-            .verticalScroll(
-                rememberScrollState()
-            )
-            .padding(
-                horizontal = 18.dp,
-                vertical = 16.dp
-            )
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 20.dp, vertical = 18.dp)
     ) {
-        Row(
-            modifier =
-                Modifier.fillMaxWidth(),
-            verticalAlignment =
-                Alignment.CenterVertically
-        ) {
-            Column(
-                modifier =
-                    Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "HouseMind",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .titleLarge,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .primary
-                )
-
-                Text(
-                    text = "Home care",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .labelMedium,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .onSurfaceVariant
-                )
-            }
-
-            Surface(
-                shape = CircleShape,
-                color =
-                    MaterialTheme
-                        .colorScheme
-                        .secondaryContainer
-            ) {
-                Icon(
-                    imageVector =
-                        Icons.Outlined.Home,
-                    contentDescription =
-                        null,
-                    tint =
-                        MaterialTheme
-                            .colorScheme
-                            .onSecondaryContainer,
-                    modifier =
-                        Modifier.padding(
-                            10.dp
-                        )
-                )
-            }
-        }
-
-        Spacer(
-            Modifier.height(
-                22.dp
-            )
+        Text(
+            text = "HouseMind",
+            style = MaterialTheme.typography.displaySmall
         )
+
+        Spacer(Modifier.height(4.dp))
 
         Text(
-            text =
-                "Keep your home running smoothly",
-            style =
-                MaterialTheme
-                    .typography
-                    .headlineMedium
+            text = "Your home, organized and ahead of schedule.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(
-            Modifier.height(
-                6.dp
-            )
-        )
-
-        Text(
-            text =
-                "See what needs attention, what is coming up, and what HouseMind knows about your home.",
-            style =
-                MaterialTheme
-                    .typography
-                    .bodyLarge,
-            color =
-                MaterialTheme
-                    .colorScheme
-                    .onSurfaceVariant
-        )
-
-        Spacer(
-            Modifier.height(
-                20.dp
-            )
-        )
+        Spacer(Modifier.height(22.dp))
 
         Card(
-            modifier =
-                Modifier.fillMaxWidth(),
-            shape =
-                RoundedCornerShape(
-                    24.dp
-                ),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor =
-                        MaterialTheme
-                            .colorScheme
-                            .primaryContainer,
-                    contentColor =
-                        MaterialTheme
-                            .colorScheme
-                            .onPrimaryContainer
-                )
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(28.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
         ) {
             Column(
-                modifier =
-                    Modifier.padding(
-                        20.dp
-                    )
+                modifier = Modifier.padding(22.dp)
             ) {
                 Text(
-                    text =
-                        "NEXT UP",
-                    style =
-                        MaterialTheme
-                            .typography
-                            .labelMedium,
-                    color =
-                        MaterialTheme
-                            .colorScheme
-                            .primary
+                    text = when (attentionCount) {
+                        0 -> "Everything important is under control"
+                        1 -> "1 item needs your attention"
+                        else -> "$attentionCount items need your attention"
+                    },
+                    style = MaterialTheme.typography.titleLarge
                 )
 
-                Spacer(
-                    Modifier.height(
-                        8.dp
-                    )
-                )
+                Spacer(Modifier.height(16.dp))
 
-                if (
-                    nextItem == null
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    Text(
-                        text =
-                            "Add your first home item",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .titleLarge
+                    SummaryMetric(
+                        modifier = Modifier.weight(1f),
+                        value = attentionCount.toString(),
+                        label = "Alerts"
                     )
-
-                    Spacer(
-                        Modifier.height(
-                            6.dp
-                        )
+                    SummaryMetric(
+                        modifier = Modifier.weight(1f),
+                        value = planningCount.toString(),
+                        label = "Plan"
                     )
-
-                    Text(
-                        text =
-                            "Scan an appliance or add a home system to start building your maintenance plan.",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .bodyMedium
+                    SummaryMetric(
+                        modifier = Modifier.weight(1f),
+                        value = healthyCount.toString(),
+                        label = "On track"
                     )
-
-                    Spacer(
-                        Modifier.height(
-                            16.dp
-                        )
-                    )
-
-                    Button(
-                        onClick =
-                            onScanSomething,
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        shape =
-                            RoundedCornerShape(
-                                16.dp
-                            )
-                    ) {
-                        Icon(
-                            imageVector =
-                                Icons.Outlined.Add,
-                            contentDescription =
-                                null
-                        )
-
-                        Spacer(
-                            Modifier.width(
-                                8.dp
-                            )
-                        )
-
-                        Text(
-                            "Add first item"
-                        )
-                    }
-                } else {
-                    Row(
-                        verticalAlignment =
-                            Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text =
-                                nextItem.name,
-                            modifier =
-                                Modifier.weight(
-                                    1f
-                                ),
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .titleLarge,
-                            maxLines = 1,
-                            overflow =
-                                TextOverflow
-                                    .Ellipsis
-                        )
-
-                        if (
-                            nextState != null
-                        ) {
-                            StatusPill(
-                                state =
-                                    nextState
-                            )
-                        }
-                    }
-
-                    if (
-                        nextItem.brand
-                            .isNotBlank() ||
-                        nextItem.modelNumber
-                            .isNotBlank()
-                    ) {
-                        Spacer(
-                            Modifier.height(
-                                5.dp
-                            )
-                        )
-
-                        Text(
-                            text =
-                                listOf(
-                                    nextItem.brand,
-                                    nextItem.modelNumber
-                                )
-                                    .filter {
-                                        it.isNotBlank()
-                                    }
-                                    .joinToString(
-                                        " • "
-                                    ),
-                            style =
-                                MaterialTheme
-                                    .typography
-                                    .bodyMedium,
-                            color =
-                                MaterialTheme
-                                    .colorScheme
-                                    .onPrimaryContainer
-                                    .copy(
-                                        alpha = 0.78f
-                                    ),
-                            maxLines = 1,
-                            overflow =
-                                TextOverflow
-                                    .Ellipsis
-                        )
-                    }
-
-                    Spacer(
-                        Modifier.height(
-                            10.dp
-                        )
-                    )
-
-                    Text(
-                        text =
-                            nextState?.detail
-                                ?: "Open this item to finish setting up its maintenance details.",
-                        style =
-                            MaterialTheme
-                                .typography
-                                .bodyLarge
-                    )
-
-                    Spacer(
-                        Modifier.height(
-                            16.dp
-                        )
-                    )
-
-                    Button(
-                        onClick = {
-                            onItemClick(
-                                nextItem
-                            )
-                        },
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        shape =
-                            RoundedCornerShape(
-                                16.dp
-                            )
-                    ) {
-                        Text(
-                            "View item"
-                        )
-
-                        Spacer(
-                            Modifier.width(
-                                6.dp
-                            )
-                        )
-
-                        Icon(
-                            imageVector =
-                                Icons.Outlined
-                                    .ChevronRight,
-                            contentDescription =
-                                null
-                        )
-                    }
                 }
             }
         }
 
-        Spacer(
-            Modifier.height(
-                14.dp
-            )
-        )
+        Spacer(Modifier.height(18.dp))
 
         Button(
-            onClick =
-                onScanSomething,
+            onClick = onScanSomething,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(
-                    54.dp
-                ),
-            shape =
-                RoundedCornerShape(
-                    16.dp
-                )
+                .height(56.dp),
+            shape = RoundedCornerShape(18.dp)
         ) {
             Icon(
-                imageVector =
-                    Icons.Outlined.Add,
-                contentDescription =
-                    null
+                imageVector = Icons.Outlined.Add,
+                contentDescription = null
             )
-
-            Spacer(
-                Modifier.width(
-                    8.dp
-                )
-            )
-
-            Text(
-                "Scan or add an item"
-            )
+            Spacer(Modifier.width(8.dp))
+            Text("Add or scan a home item")
         }
 
-        Spacer(
-            Modifier.height(
-                18.dp
-            )
+        Spacer(Modifier.height(28.dp))
+
+        SectionHeader(
+            title = if (attentionCount > 0) "Priority" else "Your home",
+            subtitle = if (attentionCount > 0) {
+                "The items that deserve a look first."
+            } else {
+                "A clear view of every tracked appliance and system."
+            }
         )
 
-        Surface(
-            modifier =
-                Modifier.fillMaxWidth(),
-            shape =
-                RoundedCornerShape(
-                    18.dp
-                ),
-            color =
-                MaterialTheme
-                    .colorScheme
-                    .surfaceVariant
-        ) {
-            Text(
-                text =
-                    "$attentionCount attention  •  $planningCount planning  •  $healthyCount on track",
-                modifier =
-                    Modifier.padding(
-                        horizontal = 16.dp,
-                        vertical = 12.dp
-                    ),
-                style =
-                    MaterialTheme
-                        .typography
-                        .labelLarge,
-                color =
-                    MaterialTheme
-                        .colorScheme
-                        .onSurfaceVariant
-            )
-        }
+        Spacer(Modifier.height(14.dp))
 
-        Spacer(
-            Modifier.height(
-                28.dp
-            )
-        )
-
-        Text(
-            text =
-                "Your home",
-            style =
-                MaterialTheme
-                    .typography
-                    .titleLarge
-        )
-
-        Spacer(
-            Modifier.height(
-                4.dp
-            )
-        )
-
-        Text(
-            text =
-                if (
-                    houseItems.isEmpty()
-                ) {
-                    "Your appliances and home systems will appear here."
-                } else {
-                    "Tap an item to see maintenance, parts, documents, warranty, and replacement planning."
-                },
-            style =
-                MaterialTheme
-                    .typography
-                    .bodyMedium,
-            color =
-                MaterialTheme
-                    .colorScheme
-                    .onSurfaceVariant
-        )
-
-        Spacer(
-            Modifier.height(
-                14.dp
-            )
-        )
-
-        if (
-            sortedItems.isEmpty()
-        ) {
+        if (sortedItems.isEmpty()) {
             EmptyHomeCard(
-                onScanSomething =
-                    onScanSomething
+                onScanSomething = onScanSomething
             )
         } else {
-            sortedItems.forEachIndexed {
-                index,
-                item ->
-
+            sortedItems.forEachIndexed { index, item ->
                 ProfessionalHomeItemCard(
-                    item =
-                        item,
-                    state =
-                        states[item.id]
-                            ?: ProItemState(
-                                status =
-                                    ProStatus
-                                        .Unscheduled,
-                                label =
-                                    "Set up",
-                                detail =
-                                    "Add maintenance or model details to unlock smarter tracking."
-                            ),
-                    onClick = {
-                        onItemClick(
-                            item
-                        )
-                    }
+                    item = item,
+                    state = states[item.id] ?: ProItemState(
+                        status = ProStatus.Unscheduled,
+                        label = "Set up",
+                        detail = "Add maintenance or model details to unlock smarter tracking."
+                    ),
+                    onClick = { onItemClick(item) }
                 )
 
-                if (
-                    index <
-                    sortedItems.lastIndex
-                ) {
-                    Spacer(
-                        Modifier.height(
-                            10.dp
-                        )
-                    )
+                if (index < sortedItems.lastIndex) {
+                    Spacer(Modifier.height(12.dp))
                 }
             }
         }
@@ -793,7 +385,7 @@ private fun ProfessionalHomeItemCard(
                     Text(
                         text = listOf(item.brand, item.modelNumber)
                             .filter { it.isNotBlank() }
-                            .joinToString("  •  "),
+                            .joinToString("  â€¢  "),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
@@ -914,7 +506,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Critical,
             label = "Overdue",
-            detail = "${overdueTask.title} • ${MaintenanceScheduleCalculator.statusText(overdueTask)}"
+            detail = "${overdueTask.title} â€¢ ${MaintenanceScheduleCalculator.statusText(overdueTask)}"
         )
     }
 
@@ -931,7 +523,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Attention,
             label = "Due soon",
-            detail = "${dueSoonTask.title} • ${MaintenanceScheduleCalculator.formattedDueDate(dueSoonTask)}"
+            detail = "${dueSoonTask.title} â€¢ ${MaintenanceScheduleCalculator.formattedDueDate(dueSoonTask)}"
         )
     }
 
@@ -961,7 +553,7 @@ private fun professionalState(
         return ProItemState(
             status = ProStatus.Planning,
             label = "Plan",
-            detail = "${forecast.statusText} • ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
+            detail = "${forecast.statusText} â€¢ ${forecast.earliestReplacementDate.year}-${forecast.latestReplacementDate.year}"
         )
     }
 
@@ -978,7 +570,7 @@ private fun professionalState(
             return ProItemState(
                 status = ProStatus.Healthy,
                 label = "On track",
-                detail = "${nextTask.title} • ${MaintenanceScheduleCalculator.formattedDueDate(nextTask)}"
+                detail = "${nextTask.title} â€¢ ${MaintenanceScheduleCalculator.formattedDueDate(nextTask)}"
             )
         }
     }
@@ -1072,7 +664,7 @@ fun ProfessionalItemOverview(
             Text(
                 text = listOf(item.brand, item.modelNumber)
                     .filter { it.isNotBlank() }
-                    .joinToString("  •  "),
+                    .joinToString("  â€¢  "),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
